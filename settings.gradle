@@ -1,4 +1,5 @@
 rootProject.name = 'ArchitectureAndDesignPattern'
 include 'ProxySample'
+include 'Factory'
 include 'Adapter'
 

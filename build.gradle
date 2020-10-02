@@ -1,6 +1,9 @@
 subprojects {
     apply plugin: 'java'
 
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
     repositories {
         mavenCentral()
     }
@@ -12,7 +15,7 @@ subprojects {
     dependencies {
         compileOnly 'org.projectlombok:lombok:1.18.12'
         annotationProcessor 'org.projectlombok:lombok:1.18.12'
-        compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.30'
+        compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.30'
 
         testCompileOnly 'org.projectlombok:lombok:1.18.12'
         testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
