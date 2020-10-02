@@ -15,4 +15,8 @@ public class PlusMatrix implements Matrix{
     public int get(int row, int clm) {
         return a.get(row, clm) + b.get(row, clm);
     }
+
+    public Matrix plus(Matrix a) {
+        return new PlusMatrix(this, a);
+    }
 }
