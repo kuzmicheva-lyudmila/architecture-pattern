@@ -1,7 +1,5 @@
 package ru.otus.kl.threads;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,10 +15,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.Thread.sleep;
 
-@Slf4j
 public class MultiplyOperation implements MatrixOperation {
 
     private static final int THREAD_COUNT = 5;
+
+    private final CustomLogger customLogger = CustomLogger.getInstance();
 
     private final String protocolFile;
     private final int[][] matrixA;
@@ -54,12 +53,14 @@ public class MultiplyOperation implements MatrixOperation {
         CompletableFuture.runAsync(this::calculateMatrix)
                 .thenRun(
                     () -> Arrays.stream(matrixResult.get())
-                            .forEach(array -> log.info("Result matrix: {}", Arrays.toString(array)))
+                            .forEach(
+                                    array -> customLogger.put("Result matrix: %s", Arrays.toString(array))
+                            )
                 )
                 .thenRun(this::saveResult)
                 .thenRun(
                         () -> {
-                            log.info("Success");
+                            customLogger.put("Success");
                             latch.countDown();
                         }
                 );
@@ -78,7 +79,11 @@ public class MultiplyOperation implements MatrixOperation {
                             task();
                             latch.countDown();
                         } catch (InterruptedException e) {
-                            log.error("{}: was interrupted!", Thread.currentThread().getName(), e);
+                            customLogger.put(
+                                    "%s: was interrupted! %s",
+                                    Thread.currentThread().getName(),
+                                    e.getMessage()
+                            );
                             Thread.currentThread().interrupt();
                             throw new IllegalThreadStateException();
                         }
@@ -90,7 +95,7 @@ public class MultiplyOperation implements MatrixOperation {
         try {
             latch.await();
         } catch (InterruptedException e) {
-            log.error("{}: CountDownLatch interrupted!", Thread.currentThread().getName(), e);
+            customLogger.put("%s: CountDownLatch interrupted! %s", Thread.currentThread().getName(), e.getMessage());
             Thread.currentThread().interrupt();
             throw new IllegalThreadStateException();
         } finally {
@@ -101,17 +106,22 @@ public class MultiplyOperation implements MatrixOperation {
 
     private void task() throws InterruptedException {
         sleep(1000);
-        log.info("{}: start task", Thread.currentThread().getName());
+        customLogger.put("%s: start task", Thread.currentThread().getName());
         for (int row = 0; row < dimension; row++) {
             for (int column = 0; column < dimension; column++) {
                 if (needCalculateCell(row, column)) {
-                    log.info("{}: calculate cell row = {} column = {}", Thread.currentThread().getName(), row, column);
+                    customLogger.put(
+                            "%s: calculate cell row = %d column = %d",
+                            Thread.currentThread().getName(),
+                            row,
+                            column
+                    );
                     matrixResult.get()[row][column] = calculateCell(row, column);
                 }
                 sleep(100);
             }
         }
-        log.info("{}: end task", Thread.currentThread().getName());
+        customLogger.put("%s: end task", Thread.currentThread().getName());
     }
 
     private int calculateCell(int row, int column) {
@@ -129,17 +139,18 @@ public class MultiplyOperation implements MatrixOperation {
             saveStringToFile(protocolFilePath, "\n".getBytes());
         }
 
-        Arrays.stream(matrixResult.get()).forEach(
-                array -> saveStringToFile(protocolFilePath, Arrays.toString(array).getBytes())
-        );
-        log.info("Protocol saved");
+        Arrays.stream(matrixResult.get())
+                .forEach(
+                        array -> saveStringToFile(protocolFilePath, Arrays.toString(array).getBytes())
+                );
+        customLogger.put("Protocol saved");
     }
 
     private void saveStringToFile(Path protocolFilePath, byte[] bytes) {
         try {
             Files.write(protocolFilePath, bytes, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
-            log.error("Syntax error on paring the protocol file path", e);
+            customLogger.put("Syntax error on paring the protocol file path: %s", e.getMessage());
             throw new IllegalArgumentException(e);
         }
     }
