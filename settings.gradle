@@ -3,5 +3,4 @@ include 'ProxySample'
 include 'Factory'
 include 'Adapter'
 include 'chain'
-include 'template'
 
